@@ -1,6 +1,7 @@
 require 'csv'
 require 'google/apis/civicinfo_v2'
 require 'erb'
+require 'date'
 
 
 def clean_zipcode(zipcode)
@@ -77,5 +78,49 @@ def get_phone_numbers
     end
 end
 
+def get_datetimes
+  contents = get_contents
+  datetimes = []
+
+  contents.each do |row|
+      datetimes.push(DateTime.strptime(row[:regdate], "%m/%d/%y %H:%M"))
+  end
+
+  datetimes
+end
+
+def get_best_hours
+  hours = []
+  best_hours = []
+
+  get_datetimes.each { |datetime| hours.push(datetime.hour) }
+  hours.tally.each { |hour, amount| best_hours.push(hour) if amount == hours.tally.values.max }
+  
+  if best_hours.length > 1
+    best_hours_str = best_hours.join(", ") 
+  else
+    best_hours_str = best_hours.to_s
+  end
+
+  puts "The hours of the day most people registered were: #{best_hours_str}"
+end
+
+def get_best_day
+  days = []
+  best_days = []
+
+  get_datetimes.each { |datetime| days.push(Date::DAYNAMES[datetime.wday]) }
+  days.tally.each { |wday, amount| best_days.push(wday) if amount == days.tally.values.max }
+
+  if best_days.length > 1
+    best_days_str = best_days.join(", ") 
+  else 
+    best_days_str = best_days[0].to_s
+  end
+
+  puts "The days of the week most people registered were: #{best_days_str}"
+end
 # create_letters
 # get_phone_numbers
+get_best_hours
+get_best_day
